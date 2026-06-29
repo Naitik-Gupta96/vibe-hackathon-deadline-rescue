@@ -141,6 +141,13 @@ async def health():
     return {"status": "ok", "version": "1.0.0", "timestamp": datetime.now().isoformat()}
 
 
-dist_path = os.path.join(os.path.dirname(__file__), "..", "dist")
-if os.path.exists(dist_path):
-    app.mount("/", StaticFiles(directory=dist_path, html=True), name="frontend")
+import os as _os
+root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+dist_candidates = [
+    _os.path.join(root, "dist"),
+    _os.path.join(root, "frontend", "dist"),
+]
+for dist_path in dist_candidates:
+    if _os.path.exists(dist_path) and _os.path.isdir(dist_path):
+        app.mount("/", StaticFiles(directory=dist_path, html=True), name="frontend")
+        break
