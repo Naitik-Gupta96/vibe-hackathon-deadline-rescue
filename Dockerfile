@@ -1,15 +1,24 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS server-builder
+WORKDIR /app
+COPY package.json tsconfig.server.json ./
+COPY server/ ./server/
+COPY server.ts ./
+RUN npm install
+RUN npx tsc --project tsconfig.server.json
+
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-FROM python:3.11-slim
+FROM node:20-alpine
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY backend/ .
-COPY --from=builder /app/dist ./dist
-EXPOSE 8080
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
+COPY --from=server-builder /app/dist-server ./dist-server
+COPY --from=server-builder /app/node_modules ./node_modules
+COPY --from=server-builder /app/package.json ./
+COPY --from=frontend-builder /app/dist ./frontend/dist
+COPY .env ./
+EXPOSE 3000
+CMD ["node", "dist-server/server.js"]

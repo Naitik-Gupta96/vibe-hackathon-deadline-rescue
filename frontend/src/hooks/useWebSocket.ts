@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { WSMessage } from '../types'
 
-const WS_URL = `ws://${window.location.hostname}:8000/ws/chat`
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+const WS_URL = `${protocol}//${window.location.host}/ws/chat`
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null)
